@@ -10,10 +10,8 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(innerWidth, innerHeight);
 document.getElementById('app').prepend(renderer.domElement);
 
-const world = new CANNON.World({ gravity: new CANNON.Vec3(0, -9.5, 0) });
+const world = new CANNON.World({ gravity: new CANNON.Vec3(0, -12, 0) });
 world.solver.iterations = 12;
-world.defaultContactMaterial.friction = 0.48;
-world.defaultContactMaterial.restitution = 0.06;
 
 const light = new THREE.DirectionalLight(0xffffff, 1.2); light.position.set(6, 10, 4);
 scene.add(light, new THREE.AmbientLight(0xffffff, .45));
@@ -31,20 +29,17 @@ const faceColors = Array.from({length:20}, (_,i)=> new THREE.Color().setHSL(i/20
 
 function createPog(color, z){
   const group = new THREE.Group();
-  const geo = new THREE.CylinderGeometry(0.55,0.55,0.08,36);
+  const geo = new THREE.CylinderGeometry(0.55,0.55,0.12,36);
   const bodyMat = new THREE.MeshStandardMaterial({ color: pogBackColor });
   const ring = new THREE.Mesh(geo, bodyMat);
   const top = new THREE.Mesh(new THREE.CircleGeometry(0.52, 32), new THREE.MeshStandardMaterial({color}));
-  top.rotation.x = -Math.PI/2; top.position.y = 0.041;
+  top.rotation.x = -Math.PI/2; top.position.y = 0.061;
   group.add(ring, top);
 
-  const body = new CANNON.Body({ mass: .1, shape: new CANNON.Cylinder(.55,.55,.08,24), material: new CANNON.Material('pog') });
+  const body = new CANNON.Body({ mass: .12, shape: new CANNON.Cylinder(.55,.55,.12,24), material: new CANNON.Material('pog') });
   body.position.set(0, .2, z);
-  body.angularDamping = .28;
-  body.linearDamping = .18;
-  body.allowSleep = true;
-  body.sleepSpeedLimit = 0.12;
-  body.sleepTimeLimit = 0.35;
+  body.angularDamping = .12;
+  body.linearDamping = .05;
 
   scene.add(group); world.addBody(body);
   return { mesh: group, body, captured: null };
@@ -83,7 +78,7 @@ function animateToStack(t){
 function startMiniGame(){
   state.phase='target';
   document.getElementById('minigame').style.display='block';
-  document.getElementById('message').textContent=`${state.turn === 'player' ? 'Votre tour: Espace pour verrouiller la cible' : 'Tour adversaire (IA): calcul en cours...'}`;
+  document.getElementById('message').textContent=`${state.turn === 'player' ? 'Votre' : 'Tour adversaire (IA)'}: Espace pour verrouiller la cible`;
   buildPowerTrack();
 }
 
@@ -101,7 +96,7 @@ function buildPowerTrack(){
 
 function launchKini(){
   state.phase='launch';
-  document.getElementById('message').textContent = 'Lancement du Kini...';
+  document.getElementById('minigame').style.display='none';
   const kiniGeo = new THREE.CylinderGeometry(0.62,0.62,0.24,36);
   const kini = new THREE.Mesh(kiniGeo, new THREE.MeshStandardMaterial({ color: 0xe8eaf2, metalness:.2, roughness:.4 }));
   scene.add(kini);
@@ -138,11 +133,9 @@ function scoreTurn(){
   const total = state.playerScore + state.enemyScore;
   if (total >= stackPogs.length) return endGame();
   state.turn = state.turn === 'player' ? 'enemy' : 'player';
-  document.getElementById('message').textContent = `+${gained} pog(s). Reformation de la pile...`;
-  restackRemaining(() => {
-    startMiniGame();
-    if (state.turn === 'enemy') setTimeout(()=>autoPlay(), 800);
-  });
+  state.phase='target';
+  document.getElementById('message').textContent = `+${gained} pog(s). ${state.turn === 'player' ? 'Votre tour.' : 'Tour adversaire (auto).'}`;
+  if (state.turn === 'enemy') setTimeout(()=>autoPlay(), 1000);
 }
 
 function autoPlay(){
@@ -151,23 +144,8 @@ function autoPlay(){
 
 function endGame(){
   state.phase='done';
-  document.getElementById('minigame').style.display='none';
   document.getElementById('scoreBoard').style.display='grid';
   document.getElementById('finalScore').textContent = `Vous: ${state.playerScore} | Adversaire: ${state.enemyScore}`;
-}
-
-function restackRemaining(done){
-  const remaining = stackPogs.filter((p) => !p.captured);
-  remaining
-    .sort((a,b) => a.body.position.y - b.body.position.y)
-    .forEach((p, i) => {
-      p.body.velocity.setZero();
-      p.body.angularVelocity.setZero();
-      p.body.position.set((Math.random() - .5) * 0.06, 0.62 + i * 0.095, (Math.random() - .5) * 0.06);
-      p.body.quaternion.setFromEuler(0, Math.random() * 0.08, 0);
-      p.body.wakeUp();
-    });
-  setTimeout(done, 850);
 }
 
 document.getElementById('startBtn').onclick = () => {
