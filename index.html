@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Prototype POG 3D</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div id="hud">
+      <div class="score-row">
+        <div>Joueur: <span id="playerScore">0</span></div>
+        <div>Adversaire: <span id="enemyScore">0</span></div>
+      </div>
+      <button id="startBtn">Commencer</button>
+      <div id="status">Place les pogs en pile pour démarrer.</div>
+      <div id="coinFlip"></div>
+      <div id="powerWrap" class="hidden">
+        <div id="powerTitle">Puissance</div>
+        <div id="powerBar">
+          <div id="powerCursor"></div>
+        </div>
+      </div>
+      <div id="endScreen" class="hidden"></div>
+    </div>
+    <canvas id="game"></canvas>
+
+    <script type="module" src="main.js"></script>
+  </body>
+</html>
